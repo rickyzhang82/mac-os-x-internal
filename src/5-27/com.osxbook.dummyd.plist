@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+<key>Label</key>
+        <string>com.osxbook.dummyd</string>
+   
+        <key>ProgramArguments</key>
+        <array>
+                <string>/tmp/dummyd</string>
+                <string>Dummy Daemon</string>
+        </array>
+   
+        <key>OnDemand</key>
+        <true/>
+   
+        <key>WorkingDirectory</key>
+        <string>/tmp</string>
+   
+        <key>EnvironmentVariables</key>
+        <dict>
+            <key>DUMMY_VARIABLE</key>
+            <string>dummyvalue</string>
+        </dict>
+   
+        <key>ServiceIPC</key>
+        <true/>
+   
+        <key>StandardErrorPath</key>
+        <string>/tmp/dummyd.log</string>
+   
+        <key>Sockets</key>
+        <dict>
+            <key>Listeners</key>
+            <dict>
+                <key>Socktype</key>
+                <string>stream</string>
+                <key>SockFamily</key>
+                <string>IPv4</string>
+                <key>SockProtocol</key>
+                <string>TCP</string>
+                <key>SockServiceName</key>
+                <string>12345</string>
+            </dict>
+        </dict>
+</dict>
+</plist>

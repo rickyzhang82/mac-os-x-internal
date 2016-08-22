@@ -1,0 +1,13 @@
+: mytime ( -- )
+    get-time ( seconds minutes hour day month year )
+    3drop    ( seconds minutes hour )
+    swap     ( seconds hour minutes )
+    rot      ( hour minutes seconds )
+    (u.) screen-width 2 char-width * - 0 font-print
+    " :" screen-width 3 char-width * - 0 font-print
+    (u.) screen-width 5 char-width * - 0 font-print
+    " :" screen-width 6 char-width * - 0 font-print
+    (u.) screen-width 8 char-width * - 0 font-print
+;
+   
+' mytime 1000 alarm

@@ -1,0 +1,68 @@
+\ Mouse Pointer Demo
+\ Commentary required for "booting" this program.
+   
+decimal
+   
+\ Our mouse pointer's dimensions in pixels
+8 value m-ptrwidth
+8 value m-ptrheight
+   
+\ Colors
+foreground-color value m-color-ptr
+background-color value m-color-bg
+   
+\ Variables for saving pointer position
+variable m-oldx 0 m-oldx !
+variable m-oldy 0 m-oldy !
+   
+0 value myscreen
+" screen" open-dev to myscreen
+   
+0 value mymouse
+" mouse" open-dev to mymouse
+   
+: mouse-fillrect ( color x y w h -- )
+    " fill-rectangle" myscreen $call-method ;
+   
+: mouse-get-event ( ms -- pos.x pos.y buttons true|false )
+    " get-event" mymouse $call-method ;
+   
+: mouse-demo ( -- )
+    cr ." Press control-z to quit the mouse demo." cr
+begin
+    0
+    mouse-get-event 
+    if
+        \ Check for button presses
+        0 =            ( pos.x pos.y buttons 0 = )
+        if
+                       \ no buttons pressed
+        else
+                       ( pos.x pos.y )
+            2dup m-oldy @ + swap m-oldx @ +
+            ." button pressed ( " . ." , " . ." )" cr
+        then
+   
+        m-color-bg     ( pos.x pos.y m-color-bg )
+        m-oldx @       ( pos.x pos.y m-color-bg m-oldx )
+        m-oldy @       ( pos.x pos.y m-color-bg m-oldx m-oldy )
+        m-ptrwidth     ( pos.x pos.y m-color-bg m-oldx m-oldy )
+        m-ptrheight    ( pos.x pos.y m-color-bg m-oldx m-oldy )
+        mouse-fillrect ( pos.x pos.y )
+        m-color-ptr    ( pos.x pos.y m-color-ptr )
+        -rot           ( m-color-ptr pos.x pos.y )
+        m-oldy @       ( m-color-ptr pos.x pos.y m-oldy )
+        +              ( m_color pos.x newy )
+        swap           ( m-color-ptr newy pos.x )
+        m-oldx @       ( m-color-ptr newy pos.x m-oldx )
+        +              ( m-color-ptr newy newx )
+        swap           ( m-color-ptr newx newy )
+        2dup           ( m-color-ptr newx newy newx newy )
+        m-oldy !       ( m-color-ptr newx newy newx )
+        m-oldx !       ( m-color-ptr newx newy )
+        m-ptrwidth     ( m-color-ptr newx newy m-ptrwidth )
+        m-ptrheight    ( m-color-ptr newx newy m-ptrwidth )
+        mouse-fillrect
+    then
+again
+;

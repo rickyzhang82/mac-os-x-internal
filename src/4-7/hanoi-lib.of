@@ -1,0 +1,310 @@
+\ Towers of Hanoi Demo
+\ Commentary required for "booting" this program.
+   
+\ Configurable values
+variable h-delay 1 h-delay !
+variable h-maxdisks 8 h-maxdisks !
+   
+: hanoi-about ( -- ) cr ." The Towers of Hanoi in Open Firmware" cr ;
+: hanoi-usage ( -- ) cr ." usage: n hanoi, 1 <= n <= " h-maxdisks @  . cr ;
+   
+decimal \ Switch base to decimal
+   
+\ Open primary display
+0 value myscreen
+" screen" open-dev to myscreen
+   
+\ Convenience wrapper function
+: hanoi-fillrect ( color x y w h -- ) " fill-rectangle" myscreen $call-method ;
+   
+\ Calculate display constants
+   
+screen-height 100 / 3 *      value h-bh          \ 3% of screen height
+screen-width 100 / 12 *      value h-bw          \ 12% of screen width
+screen-width 4 /             value h-xmaxby4     \ 25% of screen width
+screen-height 100 / 75 *     value h-th          \ 75% of screen height
+h-bh 2 /                     value h-tw
+screen-height h-th h-bh + -  value h-tower-ymin
+screen-height 100 / 2 *      value h-disk-height \ 2% of screen height
+screen-width 100 / 1 *       value h-disk-delta
+h-tower-ymin h-disk-height - value h-disk-ymin
+   
+\ Colors
+2  value h-color-base
+15 value h-color-bg
+50 value h-color-disk
+4  value h-color-tower
+   
+\ Miscellaneous variables
+variable h-dx \ A disk's x-coordinate
+variable h-dy \ A disk's y-coordinate
+variable h-dw \ A disk's width
+variable h-dh \ A disk's height
+variable h-tx \ A tower's x-coordinate
+variable h-N  \ Number of disks to solve for
+variable h-dcolor
+variable h-delta
+   
+3 buffer: h-tower-disks
+   
+: hanoi-draw-tower-base ( n -- )
+    h-color-base swap
+    h-xmaxby4 * h-bw -
+    screen-height h-bh -
+    h-bw 2 *
+    h-bh
+    hanoi-fillrect
+;
+   
+: hanoi-draw-tower-pole ( tid -- )
+    dup 1 - 0 swap h-tower-disks + c!
+    h-color-tower swap
+    h-xmaxby4 * h-tw -
+    screen-height h-th h-bh + -
+    h-tw 2 *
+    h-th
+    hanoi-fillrect
+;
+   
+: hanoi-disk-width ( did -- cdw )
+    h-bw swap h-disk-delta * -
+;
+   
+: hanoi-disk-x         ( tid did -- x )
+    hanoi-disk-width   ( tid cdw )
+    swap               ( cdw tid )
+    h-xmaxby4 * swap   ( [tid * h-xmaxby4] cdw )
+    -                  ( [tid * h-xmaxby4] - cdw )
+;
+   
+: hanoi-disk-y ( tn -- y )
+    screen-height swap ( screen-height tn )
+    1 +                ( screen-height [tn + 1] )
+    h-disk-height *    ( screen-height [[tn + 1] * h-disk-height] )
+    h-bh +             ( screen-height [[[tn + 1] * h-disk-height] + h-bh] )
+    -                  ( screen-height - [[[tn + 1] * h-disk-height] + h-bh] )
+;
+   
+: hanoi-tower-disks-inc    ( tid -- tn )
+    dup                    ( tid tid )
+    1 - h-tower-disks + c@ \ fetch cn, current number of disks
+    dup                    ( tid cn cn )
+    1 +                    ( tid cn [cn + 1] )
+    rot                    ( cn [cn + 1] tid )
+    1 - h-tower-disks + c!
+;
+   
+: hanoi-tower-disks-dec    ( tid -- tn )
+    dup                    ( tid tid )
+    1 - h-tower-disks + c@ \ fetch cn, current number of disks
+    dup                    ( tid cn cn )
+    1 -                    ( tid cn [cn - 1] )
+    rot                    ( cn [cn + 1] tid )
+    1 - h-tower-disks + c!
+;
+   
+: hanoi-tower-disk-add     ( tid did -- )
+    h-color-disk           ( tid did color )
+    -rot                   ( color tid did )
+    2dup                   ( color tid did tid did )
+    hanoi-disk-x           ( color tid did x )
+    -rot                   ( color x tid did )
+    over                   ( color x tid did tid )
+    hanoi-tower-disks-inc  ( color x tid did tn )
+    hanoi-disk-y           ( color x tid did y )
+    -rot                   ( color x y tid did )
+    hanoi-disk-width 2 *   ( color x y tid w )
+    swap                   ( color x y w tid )
+    drop                   ( color x y w )
+    h-disk-height          ( color x y w h )
+    hanoi-fillrect
+;
+   
+: hanoi-init ( n -- )
+   
+    \ Initialize variables
+    0 h-dx !
+    0 h-dy !
+    0 h-tower-disks c!
+    0 h-tower-disks 1 + c!
+    0 h-tower-disks 2 + c!
+   
+    \ Draw tower bases
+    1 hanoi-draw-tower-base
+    2 hanoi-draw-tower-base
+    3 hanoi-draw-tower-base
+   
+    \ Draw tower poles
+    1 hanoi-draw-tower-pole
+    2 hanoi-draw-tower-pole
+    3 hanoi-draw-tower-pole
+   
+    \ Add disks to source tower
+    1 +
+    1
+    do
+        1 i hanoi-tower-disk-add 
+    loop
+;
+   
+: hanoi-sleep ( msec -- )
+    ms
+;
+   
+: hanoi-drawloop-up ( limit start -- )
+do
+     h-color-bg
+     h-dx @
+     h-dy @ i - h-dh @ + 1 -
+     h-dw @
+     1
+     hanoi-fillrect
+   
+     h-color-disk
+     h-dx @
+     h-dy @ i - 1 -
+     h-dw @
+     1
+     hanoi-fillrect
+   
+     h-dy @ i - h-disk-ymin >
+     if
+         h-color-tower
+         h-tx @
+         h-dy @ i - h-dh @ + 1 -
+         h-tw 2 *
+         1
+         hanoi-fillrect
+     then
+   
+     h-delay @ hanoi-sleep
+loop
+;
+   
+: hanoi-drawloop-down ( limit start -- )
+do
+     h-color-bg
+     h-dx @
+     h-disk-ymin i +
+     h-dw @
+     1
+     hanoi-fillrect
+   
+     h-color-disk
+     h-dx @
+     h-disk-ymin i + 1 + h-dh @ +
+     h-dw @
+     1
+     hanoi-fillrect
+   
+     i h-dh @ >
+     if
+         h-color-tower
+         h-tx @
+         h-disk-ymin i +
+         h-tw 2 *
+         1
+         hanoi-fillrect
+     then
+   
+     h-delay @ hanoi-sleep
+loop
+;
+   
+: hanoi-drawloop-lr ( limit start -- )
+do
+     h-color-bg
+     h-dx @ i +
+     h-disk-ymin
+     h-dw @
+     h-dh @
+     hanoi-fillrect
+   
+     h-color-disk
+     h-dx @ i + h-delta @ +
+     h-disk-ymin
+     h-dw @
+     h-dh @
+     hanoi-fillrect
+   
+     h-delay @ hanoi-sleep
+   
+h-delta @
++loop
+;
+   
+: hanoi-disk-move-up      ( tid did -- )
+    h-color-disk          ( tid did color )
+    -rot                  ( color tid did )
+    2dup                  ( color tid did tid did )
+    hanoi-disk-x          ( color tid did x )
+    -rot                  ( color x tid did )
+    over                  ( color x tid did tid )
+    hanoi-tower-disks-dec ( color x tid did tn )
+    1 -                   ( color x tid tid [tn - 1] )
+    hanoi-disk-y          ( color x tid did y )
+    -rot                  ( color x y tid did )
+    hanoi-disk-width      ( color x y tid w )
+    swap                  ( color x y w tid )
+    drop                  ( color x y w )
+    h-disk-height         ( color x y w h )
+    h-dh !
+    2 * h-dw !
+    h-dy !
+    h-dx !
+    h-dcolor !
+    h-dx @ h-dw @ 2 / + h-tw - h-tx !
+    h-dy @ h-disk-ymin -
+    0
+    hanoi-drawloop-up
+;
+   
+: hanoi-disk-move-down    ( tid did -- )
+    h-color-disK          ( tid did color )
+    -rot                  ( color tid did )
+    2dup                  ( color tid did tid did )
+    hanoi-disk-x          ( color tid did x )
+    -rot                  ( color x tid did )
+    over                  ( color x tid did tid )
+    hanoi-tower-disks-inc ( color x tid did tn )
+    hanoi-disk-y          ( color x tid did y )
+    -rot                  ( color x y tid did )
+    hanoi-disk-width 2 *  ( color x y tid w )
+    swap                  ( color x y w tid )
+    drop                  ( color x y w )
+    h-disk-height         ( color x y w h )
+    h-dh !
+    h-dw !
+    h-dy !
+    h-dx !
+    h-dcolor !
+    h-dx @ h-dw @ 2 / + h-tw - h-tx !
+    h-dy @ h-disk-ymin -
+    0
+    hanoi-drawloop-down
+;
+   
+: hanoi-disk-move-lr ( tto tfrom -- )
+    2dup <
+    if
+        \ We are moving left
+        1 negate h-delta !
+        - h-xmaxby4 * h-delta @ -
+        0
+    else
+        \ We are moving right
+        1 h-delta !
+        - h-xmaxby4 *
+        0
+    then
+   
+    hanoi-drawloop-lr
+;
+   
+: hanoi-disk-move ( totid fromtid did -- )
+    h-N @ 1 + swap -
+    1 pick 1 pick hanoi-disk-move-up
+    2 pick 2 pick hanoi-disk-move-lr
+    2 pick 1 pick hanoi-disk-move-down
+    3drop
+;

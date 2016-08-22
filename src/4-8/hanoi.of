@@ -1,0 +1,68 @@
+: hanoi-solve
+begin
+depth
+    0 >
+    while
+        6 3 pick 3 pick + -     ( n from to processed left )
+        1 pick
+        0 =
+        if
+            4 pick
+            1 =
+            if
+                2 pick
+                4 pick
+                6 pick
+                hanoi-disk-move
+                2drop 2drop drop
+            else
+                                ( n from to processed left )
+                1 -rot          ( n from to 1 processed left )
+                swap drop       ( n from to 1 left )
+                4 pick 1 - swap ( n from to 1 [n - 1] left )
+                4 pick swap 0   ( n from to 1 [n - 1] from left 0 )
+            then
+        else
+                                ( n from to processed left )
+            swap drop           ( n from to left )
+            1 pick
+            3 pick
+            5 pick
+            hanoi-disk-move
+                                ( n from to left )
+            swap                ( n from left to )
+            rot drop            ( n left to )
+            rot 1 -             ( left to [n - 1] )
+            -rot 0              ( [n - 1] left to 0 )
+        then
+    repeat
+;
+   
+: hanoi-validate ( n -- n true|false )
+    depth
+    1 < \ assert that the stack has exactly one value
+    if
+        cr ." usage: n hanoi, where 1 <= n <= " h-maxdisks @ . cr
+        false
+    else
+        dup 1 h-maxdisks @ between
+        if 
+            true
+        else
+            cr ." usage: n hanoi, where 1 <= n <= " h-maxdisks @ . cr
+            drop
+            false
+        then
+    then
+;
+   
+: hanoi ( n -- )
+    hanoi-validate
+    if
+        erase-screen cr
+        ." Press control-z to quit the animation." cr
+        dup h-N !
+        dup hanoi-init
+        1 3 0 hanoi-solve
+    then
+;

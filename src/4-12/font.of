@@ -1,0 +1,79 @@
+\ Font Demo
+\ Commentary required for "booting" this program.
+   
+decimal
+   
+0 value myscreen
+" screen" open-dev to myscreen
+   
+: font-drawrect ( adr x y w h -- )   " draw-rectangle" myscreen $call-method ;
+: font-readrect ( adr x y w h -- )   " read-rectangle" myscreen $call-method ;
+   
+\ Starts from (x, y) = (4 * 6, 6 + 6 + 11) = (24, 23)
+\ =
+\ _ok
+\ =
+\ 0_>_0123...
+\
+\ ASCII 32 (space) to 126 (~) decimal
+\
+."  ! #$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}~"
+cr cr
+32  value f-ascii-min
+126 value f-ascii-max
+f-ascii-max f-ascii-min - 1 + value f-nchars
+   
+char-height char-width * value f-size
+   
+\ Steal the default font
+variable f-buffer
+f-nchars f-size * alloc-mem
+f-buffer !
+f-nchars
+0
+do
+    f-buffer @ f-size i * +
+    i char-width *
+    4
+    char-width
+    char-height
+    font-readrect
+loop
+erase-screen
+   
+variable f-string
+variable f-x
+variable f-y
+   
+\ If character is not within the supported range, replace it
+: font-validate-char ( char -- char )
+    dup
+    f-ascii-min f-ascii-max between
+    if
+        \ ok
+    else
+        drop
+        f-ascii-min
+    then
+;
+   
+\ Print a string starting at a specified position
+: font-print ( string x y -- )
+    f-y !
+    f-x !
+    0
+    rot
+    f-string !
+    do
+        f-string @ i + c@
+        font-validate-char
+        f-ascii-min -
+        f-size *
+        f-buffer @ +
+        f-x @ i char-width * +
+        f-y @
+        char-width
+        char-height
+        font-drawrect
+    loop
+;

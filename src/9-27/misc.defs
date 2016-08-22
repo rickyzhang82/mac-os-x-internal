@@ -1,0 +1,59 @@
+/*
+ * A "Miscellaneous" Mach Server
+ */
+   
+/*
+ * File:    misc.defs
+ * Purpose: Miscellaneous Server subsystem definitions
+ */
+   
+/*
+ * Subsystem identifier
+ */
+Subsystem misc 500;
+   
+/*
+ * Type declarations
+ */
+#include <mach/std_types.defs>
+#include <mach/mach_types.defs>
+   
+type input_string_t = array[64] of char;
+type xput_number_t  = int
+         CType      : int
+         InTran     : xput_number_t misc_translate_int_to_xput_number_t(int)
+         OutTran    : int misc_translate_xput_number_t_to_int(xput_number_t)
+         Destructor : misc_remove_reference(xput_number_t)
+    ;
+   
+/*
+ * Import declarations
+ */
+import "misc_types.h";
+   
+/*
+ * Operation descriptions
+ */
+   
+/* This should be operation #500 */
+routine string_length(
+                         server_port : mach_port_t;
+                      in instring    : input_string_t;
+                     out len         : xput_number_t);
+   
+/* Create some holes in operation sequence */
+Skip;
+Skip;
+Skip;
+   
+/* This should be operation #504, as there are three Skip's */
+routine factorial(
+                     server_port : mach_port_t;
+                  in num         : xput_number_t;
+                 out fac         : xput_number_t);
+   
+/*
+ * Option declarations
+ */
+ServerPrefix Server_;
+UserPrefix   Client_;

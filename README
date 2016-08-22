@@ -1,0 +1,8 @@
+The src directory contains the source code for the programming examples in
+the book Mac OS X Internals: A Systems Approach by Amit Singh. The source is
+made available under the GNU General Public License (GPL).
+
+A variety of bonus reading material, including source code, not contained in
+the book is available at the book's associated web site:
+
+http://osxbook.com
